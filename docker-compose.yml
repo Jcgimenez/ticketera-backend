@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ticketera
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  api:
+    build: .
+    environment:
+      PORT: 3000
+      JWT_SECRET: devsecret
+      DATABASE_URL: postgres://postgres:postgres@db:5432/ticketera
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    command: sh -c "npx sequelize db:migrate && npx sequelize db:seed:all && node src/server.js"
+volumes:
+  pgdata: {}
+

@@ -1,0 +1,49 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Ticketera API", "version": "1.0.0" },
+  "servers": [ { "url": "/" } ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "User": { "type": "object", "properties": { "id": {"type":"integer"}, "name": {"type":"string"}, "email": {"type":"string"}, "role": {"type":"string","enum":["admin","manager","member"]}, "active": {"type":"boolean"} } },
+      "Team": { "type": "object", "properties": { "id": {"type":"integer"}, "name": {"type":"string"}, "description": {"type":"string"} } },
+      "Project": { "type": "object", "properties": { "id": {"type":"integer"}, "name": {"type":"string"}, "description": {"type":"string"}, "status": {"type":"string","enum":["active","archived"]}, "teamId": {"type":"integer"} } },
+      "Ticket": { "type": "object", "properties": { "id": {"type":"integer"}, "title": {"type":"string"}, "description": {"type":"string"}, "status": {"type":"string","enum":["open","in_progress","done"]}, "priority": {"type":"string","enum":["low","medium","high"]}, "projectId": {"type":"integer"}, "assigneeId": {"type":"integer","nullable": true} } },
+      "TimeEntry": { "type": "object", "properties": { "id": {"type":"integer"}, "hours": {"type":"number","format":"decimal"}, "date": {"type":"string","format":"date"}, "notes": {"type":"string"}, "userId": {"type":"integer"}, "ticketId": {"type":"integer"} } },
+      "PagedMeta": { "type": "object", "properties": { "total": {"type":"integer"}, "page": {"type":"integer"}, "limit": {"type":"integer"}, "pages": {"type":"integer"} } }
+    }
+  },
+  "paths": {
+    "/health": { "get": { "summary": "Healthcheck", "responses": { "200": { "description": "OK" } } } },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": {"type":"string"}, "email": {"type":"string"}, "password": {"type":"string"} }, "required": ["name","email","password"] } } } },
+        "responses": { "201": { "description": "Created" }, "409": {"description":"Email exists"} }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": {"type":"string"}, "password": {"type":"string"} }, "required": ["email","password"] } } } },
+        "responses": { "200": { "description": "OK" }, "401": {"description":"Invalid"} }
+      }
+    },
+    "/api/users": {
+      "get": { "security":[{"bearerAuth":[]}], "summary": "List users", "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": {"type":"array","items":{"$ref":"#/components/schemas/User"}}, "meta": {"$ref":"#/components/schemas/PagedMeta"} } } } } } } },
+      "post": { "security":[{"bearerAuth":[]}], "summary": "Create user", "responses": { "201": { "description": "Created" } } }
+    },
+    "/api/users/{id}": {
+      "get": { "security":[{"bearerAuth":[]}], "summary": "Get user", "parameters": [{"in":"path","name":"id","required":true,"schema":{"type":"integer"}}], "responses": { "200": { "description": "OK" }, "404": {"description":"Not found"} } },
+      "patch": { "security":[{"bearerAuth":[]}], "summary": "Update user", "parameters": [{"in":"path","name":"id","required":true,"schema":{"type":"integer"}}], "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/teams": { "get": {"security":[{"bearerAuth":[]}], "summary":"List teams","responses":{"200":{"description":"OK"}}}, "post": {"security":[{"bearerAuth":[]}], "summary":"Create team","responses":{"201":{"description":"Created"}}} },
+    "/api/projects": { "get": {"security":[{"bearerAuth":[]}], "summary":"List projects","responses":{"200":{"description":"OK"}}}, "post": {"security":[{"bearerAuth":[]}], "summary":"Create project","responses":{"201":{"description":"Created"}}} },
+    "/api/tickets": { "get": {"security":[{"bearerAuth":[]}], "summary":"List tickets","responses":{"200":{"description":"OK"}}}, "post": {"security":[{"bearerAuth":[]}], "summary":"Create ticket","responses":{"201":{"description":"Created"}}} },
+    "/api/tickets/{id}/summary": { "get": {"security":[{"bearerAuth":[]}], "summary":"Ticket summary","parameters":[{"in":"path","name":"id","required":true,"schema":{"type":"integer"}}], "responses":{"200":{"description":"OK"}}} },
+    "/api/time-entries": { "get": {"security":[{"bearerAuth":[]}], "summary":"List time entries","responses":{"200":{"description":"OK"}}}, "post": {"security":[{"bearerAuth":[]}], "summary":"Create time entry","responses":{"201":{"description":"Created"}}} }
+  }
+}
+
